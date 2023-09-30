@@ -3,6 +3,8 @@ import pandas as pd
 import sqlite3
 import os
 import sys
+# Importing the config file
+import config
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -19,11 +21,11 @@ button = driver.find_element(by=By.CLASS_NAME, value="wp-block-button")
 button.click()
 
 WebDriverWait(driver, 10).until(
-    lambda driver: os.path.exists("skill_test_data.xlsx")
+    lambda driver: os.path.exists(config.SPREADSHEET_FILENAME)
 )
 
 # reading csv file to Pandas Dataframe
-df = pd.read_excel("skill_test_data.xlsx", sheet_name="data")
+df = pd.read_excel(config.SPREADSHEET_FILENAME, sheet_name="data")
 with open("temp_file.txt", "w") as f:
     f.write(df.to_string())
 f.close()
@@ -33,7 +35,6 @@ with open("temp_file.txt", "r") as f:
 driver.quit()
 
 
-
 # creating pivot table
 pivot_table = df.pivot_table(index ="date", columns = "metric", values = "values", aggfunc = sum)
 
@@ -41,7 +42,7 @@ pivot_table = df.pivot_table(index ="date", columns = "metric", values = "values
 pivot_table = pivot_table.sort_values(by="Attributed Rev (1d)", ascending=False)
 
 # creating SQLite database
-conn = sqlite3.connect("pivot_table.db")
+conn = sqlite3.connect(config.DATABASE_FILENAME)
 
 # insert pivot table into SQLite databse
 pivot_table.to_sql("pivot_table", conn, if_exists="replace")
